@@ -1,0 +1,335 @@
+{
+  "name": "durableflow",
+  "displayName": "DurableFlow",
+  "description": "Real-time visual orchestration flow and developer tools for Azure Durable Functions",
+  "version": "0.1.0",
+  "publisher": "durable-functions-ui",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Azure",
+    "Visualization",
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "azure",
+    "functions",
+    "durable",
+    "orchestration",
+    "serverless"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/host.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "durableFunctionsUI.refreshFunctions",
+        "title": "Refresh Functions",
+        "category": "DurableFlow",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "durableFunctionsUI.startOrchestration",
+        "title": "Start Orchestration",
+        "category": "DurableFlow",
+        "icon": "$(play)"
+      },
+      {
+        "command": "durableFunctionsUI.raiseEvent",
+        "title": "Raise Event",
+        "category": "DurableFlow"
+      },
+      {
+        "command": "durableFunctionsUI.terminateInstance",
+        "title": "Terminate Instance",
+        "category": "DurableFlow",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "durableFunctionsUI.purgeInstance",
+        "title": "Purge Instance",
+        "category": "DurableFlow",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "durableFunctionsUI.viewInstanceDetails",
+        "title": "View Instance Details",
+        "category": "DurableFlow",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "durableFunctionsUI.startCoreTools",
+        "title": "Start Azure Functions Core Tools",
+        "category": "DurableFlow",
+        "icon": "$(play)"
+      },
+      {
+        "command": "durableFunctionsUI.stopCoreTools",
+        "title": "Stop Azure Functions Core Tools",
+        "category": "DurableFlow",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "durableFunctionsUI.triggerFunction",
+        "title": "Trigger Function",
+        "category": "DurableFlow",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "durableFunctionsUI.openSettings",
+        "title": "Open Settings",
+        "category": "DurableFlow",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "durableFunctionsUI.refreshInstances",
+        "title": "Refresh Instances",
+        "category": "DurableFlow",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "durableFunctionsUI.showOrchestrationFlow",
+        "title": "Show Orchestration Flow",
+        "category": "DurableFlow",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "durableFunctionsUI.openDashboard",
+        "title": "Open Instance Dashboard",
+        "category": "DurableFlow",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "durableFunctionsUI.newDurableFunction",
+        "title": "New Durable Function",
+        "category": "DurableFlow",
+        "icon": "$(add)"
+      },
+      {
+        "command": "durableFunctionsUI.azureLogin",
+        "title": "Azure Login",
+        "category": "DurableFlow",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "durableFunctionsUI.azureLogout",
+        "title": "Azure Logout",
+        "category": "DurableFlow",
+        "icon": "$(sign-out)"
+      },
+      {
+        "command": "durableFunctionsUI.selectFunctionApp",
+        "title": "Select Function App",
+        "category": "DurableFlow",
+        "icon": "$(cloud)"
+      },
+      {
+        "command": "durableFunctionsUI.openInPortal",
+        "title": "Open in Azure Portal",
+        "category": "DurableFlow",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "durableFunctionsUI.openPerformanceDashboard",
+        "title": "Open Performance Dashboard",
+        "category": "DurableFlow",
+        "icon": "$(dashboard)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "durableFunctionsUI",
+          "title": "DurableFlow",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "durableFunctionsUI": [
+        {
+          "id": "durableFunctionsUI.functions",
+          "name": "Functions"
+        },
+        {
+          "id": "durableFunctionsUI.instances",
+          "name": "Orchestration Instances"
+        },
+        {
+          "id": "durableFunctionsUI.connections",
+          "name": "Connections"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "durableFunctionsUI.functions",
+        "contents": "No Azure Functions project detected.\n[Open Folder](command:vscode.openFolder)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "durableFunctionsUI.refreshFunctions",
+          "when": "view == durableFunctionsUI.functions",
+          "group": "navigation"
+        },
+        {
+          "command": "durableFunctionsUI.refreshInstances",
+          "when": "view == durableFunctionsUI.instances",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "durableFunctionsUI.startOrchestration",
+          "when": "view == durableFunctionsUI.functions && viewItem == orchestrator",
+          "group": "inline"
+        },
+        {
+          "command": "durableFunctionsUI.triggerFunction",
+          "when": "view == durableFunctionsUI.functions && viewItem == httpTrigger",
+          "group": "inline"
+        },
+        {
+          "command": "durableFunctionsUI.terminateInstance",
+          "when": "view == durableFunctionsUI.instances && viewItem == runningInstance",
+          "group": "inline"
+        },
+        {
+          "command": "durableFunctionsUI.viewInstanceDetails",
+          "when": "view == durableFunctionsUI.instances && viewItem =~ /Instance$/",
+          "group": "inline"
+        },
+        {
+          "command": "durableFunctionsUI.showOrchestrationFlow",
+          "when": "view == durableFunctionsUI.instances && viewItem =~ /Instance$/",
+          "group": "inline"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/typescript.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/typescript.json"
+      },
+      {
+        "language": "csharp",
+        "path": "./snippets/csharp.json"
+      },
+      {
+        "language": "python",
+        "path": "./snippets/python.json"
+      },
+      {
+        "language": "java",
+        "path": "./snippets/java.json"
+      }
+    ],
+    "configuration": {
+      "title": "DurableFlow",
+      "properties": {
+        "durableFunctionsUI.defaultEnvironment": {
+          "type": "string",
+          "default": "local",
+          "enum": ["local", "azure"],
+          "description": "Default environment to connect to"
+        },
+        "durableFunctionsUI.localPort": {
+          "type": "number",
+          "default": 7071,
+          "description": "Port for Azure Functions Core Tools"
+        },
+        "durableFunctionsUI.pollingIntervalMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 500,
+          "description": "Polling interval in milliseconds for instance status updates"
+        },
+        "durableFunctionsUI.maxInstances": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Maximum number of instances to display in the dashboard"
+        },
+        "durableFunctionsUI.taskHubName": {
+          "type": "string",
+          "default": "",
+          "description": "Task Hub name (leave empty for auto-detect from host.json)"
+        },
+        "durableFunctionsUI.storageProvider": {
+          "type": "string",
+          "default": "AzureStorage",
+          "enum": ["AzureStorage", "Netherite", "MSSQL"],
+          "description": "Durable Task storage provider"
+        },
+        "durableFunctionsUI.showCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show CodeLens actions above Durable Functions"
+        },
+        "durableFunctionsUI.logLevel": {
+          "type": "string",
+          "default": "info",
+          "enum": ["debug", "info", "warn", "error"],
+          "description": "Extension log level"
+        },
+        "durableFunctionsUI.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable anonymous usage telemetry to help improve the extension. Also respects VSCode's global telemetry.telemetryLevel setting."
+        },
+        "durableFunctionsUI.alerts.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable configurable alert notifications for orchestration issues"
+        },
+        "durableFunctionsUI.alerts.longRunningThresholdMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "Alert when an orchestration runs longer than this many minutes"
+        },
+        "durableFunctionsUI.alerts.failureAlertEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show alert notifications when orchestrations fail"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build:webview && npm run build -- --production",
+    "build": "node esbuild.config.mjs",
+    "build:webview": "npm run build --prefix webview-ui",
+    "watch": "node esbuild.config.mjs --watch",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "eslint src --ext ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pretest": "npm run build",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}

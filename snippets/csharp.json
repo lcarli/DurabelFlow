@@ -1,0 +1,172 @@
+{
+  "Durable Orchestrator Function": {
+    "prefix": "df-orch",
+    "description": "Durable Functions orchestrator (C#)",
+    "body": [
+      "[FunctionName(\"${1:OrchestratorName}\")]",
+      "public static async Task<List<string>> ${1:OrchestratorName}(",
+      "    [OrchestrationTrigger] IDurableOrchestrationContext context)",
+      "{",
+      "    var outputs = new List<string>();",
+      "",
+      "    outputs.Add(await context.CallActivityAsync<string>(\"${2:ActivityName}\", \"${3:input}\"));",
+      "",
+      "    return outputs;",
+      "}"
+    ]
+  },
+  "Durable Activity Function": {
+    "prefix": "df-activity",
+    "description": "Durable Functions activity (C#)",
+    "body": [
+      "[FunctionName(\"${1:ActivityName}\")]",
+      "public static ${2:string} ${1:ActivityName}(",
+      "    [ActivityTrigger] ${3:string} input,",
+      "    ILogger log)",
+      "{",
+      "    log.LogInformation(\"${1:ActivityName} processing: {Input}\", input);",
+      "    return $\"${4:Hello} {input}\";",
+      "}"
+    ]
+  },
+  "Durable Client / HTTP Starter": {
+    "prefix": "df-client",
+    "description": "Durable Functions HTTP starter client (C#)",
+    "body": [
+      "[FunctionName(\"${1:HttpStart}\")]",
+      "public static async Task<HttpResponseMessage> ${1:HttpStart}(",
+      "    [HttpTrigger(AuthorizationLevel.Anonymous, \"get\", \"post\")] HttpRequestMessage req,",
+      "    [DurableClient] IDurableOrchestrationClient starter,",
+      "    ILogger log)",
+      "{",
+      "    string instanceId = await starter.StartNewAsync(\"${2:OrchestratorName}\", null);",
+      "",
+      "    log.LogInformation(\"Started orchestration with ID = '{InstanceId}'.\", instanceId);",
+      "",
+      "    return starter.CreateCheckStatusResponse(req, instanceId);",
+      "}"
+    ]
+  },
+  "Durable Entity Function": {
+    "prefix": "df-entity",
+    "description": "Durable Functions entity (C#)",
+    "body": [
+      "[FunctionName(\"${1:EntityName}\")]",
+      "public static void ${1:EntityName}(",
+      "    [EntityTrigger] IDurableEntityContext ctx)",
+      "{",
+      "    var currentValue = ctx.GetState<${2:int}>();",
+      "",
+      "    switch (ctx.OperationName.ToLowerInvariant())",
+      "    {",
+      "        case \"add\":",
+      "            ctx.SetState(currentValue + ctx.GetInput<${2:int}>());",
+      "            break;",
+      "        case \"reset\":",
+      "            ctx.SetState(0);",
+      "            break;",
+      "        case \"get\":",
+      "            ctx.Return(currentValue);",
+      "            break;",
+      "    }",
+      "}"
+    ]
+  },
+  "Durable Function Chaining Pattern": {
+    "prefix": "df-chain",
+    "description": "Function chaining pattern (C#)",
+    "body": [
+      "[FunctionName(\"${1:ChainOrchestrator}\")]",
+      "public static async Task<${2:string}> ${1:ChainOrchestrator}(",
+      "    [OrchestrationTrigger] IDurableOrchestrationContext context)",
+      "{",
+      "    var result1 = await context.CallActivityAsync<${2:string}>(\"${3:Step1}\", context.GetInput<${2:string}>());",
+      "    var result2 = await context.CallActivityAsync<${2:string}>(\"${4:Step2}\", result1);",
+      "    var result3 = await context.CallActivityAsync<${2:string}>(\"${5:Step3}\", result2);",
+      "",
+      "    return result3;",
+      "}"
+    ]
+  },
+  "Durable Fan-Out/Fan-In Pattern": {
+    "prefix": "df-fanout",
+    "description": "Fan-out/fan-in pattern (C#)",
+    "body": [
+      "[FunctionName(\"${1:FanOutFanInOrchestrator}\")]",
+      "public static async Task<${2:List<string>}> ${1:FanOutFanInOrchestrator}(",
+      "    [OrchestrationTrigger] IDurableOrchestrationContext context)",
+      "{",
+      "    var workItems = await context.CallActivityAsync<List<string>>(\"${3:GetWorkItems}\", null);",
+      "",
+      "    // Fan out: schedule all tasks in parallel",
+      "    var parallelTasks = new List<Task<string>>();",
+      "    foreach (var item in workItems)",
+      "    {",
+      "        parallelTasks.Add(context.CallActivityAsync<string>(\"${4:ProcessItem}\", item));",
+      "    }",
+      "",
+      "    // Fan in: wait for all tasks to complete",
+      "    var results = await Task.WhenAll(parallelTasks);",
+      "",
+      "    return results.ToList();",
+      "}"
+    ]
+  },
+  "Durable Human Interaction Pattern": {
+    "prefix": "df-human",
+    "description": "Human interaction / approval pattern with timeout (C#)",
+    "body": [
+      "[FunctionName(\"${1:ApprovalOrchestrator}\")]",
+      "public static async Task ${1:ApprovalOrchestrator}(",
+      "    [OrchestrationTrigger] IDurableOrchestrationContext context)",
+      "{",
+      "    await context.CallActivityAsync(\"${2:RequestApproval}\", context.GetInput<object>());",
+      "",
+      "    using var cts = new CancellationTokenSource();",
+      "    var expiration = context.CurrentUtcDateTime.AddHours(${3:72});",
+      "    var timeoutTask = context.CreateTimer(expiration, cts.Token);",
+      "    var approvalTask = context.WaitForExternalEvent<bool>(\"${4:ApprovalEvent}\");",
+      "",
+      "    var winner = await Task.WhenAny(approvalTask, timeoutTask);",
+      "",
+      "    if (winner == approvalTask)",
+      "    {",
+      "        cts.Cancel();",
+      "        await context.CallActivityAsync(\"${5:ProcessApproval}\", approvalTask.Result);",
+      "    }",
+      "    else",
+      "    {",
+      "        await context.CallActivityAsync(\"${6:HandleTimeout}\", \"Approval timed out\");",
+      "    }",
+      "}"
+    ]
+  },
+  "Durable Monitor Pattern": {
+    "prefix": "df-monitor",
+    "description": "Monitor / polling pattern (C#)",
+    "body": [
+      "[FunctionName(\"${1:MonitorOrchestrator}\")]",
+      "public static async Task<string> ${1:MonitorOrchestrator}(",
+      "    [OrchestrationTrigger] IDurableOrchestrationContext context)",
+      "{",
+      "    var endTime = context.CurrentUtcDateTime.AddHours(${2:6});",
+      "",
+      "    while (context.CurrentUtcDateTime < endTime)",
+      "    {",
+      "        var status = await context.CallActivityAsync<string>(\"${3:CheckStatus}\", context.GetInput<object>());",
+      "",
+      "        if (status == \"${4:done}\")",
+      "        {",
+      "            await context.CallActivityAsync(\"${5:SendNotification}\", \"Job completed!\");",
+      "            return \"completed\";",
+      "        }",
+      "",
+      "        var nextCheck = context.CurrentUtcDateTime.AddSeconds(${6:30});",
+      "        await context.CreateTimer(nextCheck, CancellationToken.None);",
+      "    }",
+      "",
+      "    return \"timed out\";",
+      "}"
+    ]
+  }
+}

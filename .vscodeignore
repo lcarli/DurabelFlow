@@ -1,0 +1,13 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+webview-ui/**
+node_modules/**
+.eslintrc.json
+.prettierrc
+tsconfig.json
+esbuild.config.mjs
+**/*.map
+**/*.ts
+!out/**

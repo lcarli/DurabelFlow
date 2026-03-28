@@ -1,0 +1,86 @@
+{
+  "Durable Orchestrator Function": {
+    "prefix": "df-orch",
+    "description": "Durable Functions orchestrator (Java)",
+    "body": [
+      "@FunctionName(\"${1:OrchestratorName}\")",
+      "public List<String> ${1:OrchestratorName}(",
+      "        @DurableOrchestrationTrigger(name = \"ctx\") TaskOrchestrationContext ctx) {",
+      "    List<String> outputs = new ArrayList<>();",
+      "",
+      "    outputs.add(ctx.callActivity(\"${2:ActivityName}\", \"${3:input}\", String.class).await());",
+      "",
+      "    return outputs;",
+      "}"
+    ]
+  },
+  "Durable Activity Function": {
+    "prefix": "df-activity",
+    "description": "Durable Functions activity (Java)",
+    "body": [
+      "@FunctionName(\"${1:ActivityName}\")",
+      "public ${2:String} ${1:ActivityName}(",
+      "        @DurableActivityTrigger(name = \"input\") ${3:String} input,",
+      "        final ExecutionContext context) {",
+      "    context.getLogger().info(\"${1:ActivityName} processing: \" + input);",
+      "    return \"${4:Hello} \" + input;",
+      "}"
+    ]
+  },
+  "Durable Client / HTTP Starter": {
+    "prefix": "df-client",
+    "description": "Durable Functions HTTP starter client (Java)",
+    "body": [
+      "@FunctionName(\"${1:HttpStart}\")",
+      "public HttpResponseMessage ${1:HttpStart}(",
+      "        @HttpTrigger(name = \"req\", methods = {HttpMethod.GET, HttpMethod.POST},",
+      "                     authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> req,",
+      "        @DurableClientInput(name = \"durableContext\") DurableClientContext durableContext,",
+      "        final ExecutionContext context) {",
+      "    DurableTaskClient client = durableContext.getClient();",
+      "    String instanceId = client.scheduleNewOrchestrationInstance(\"${2:OrchestratorName}\");",
+      "",
+      "    context.getLogger().info(\"Started orchestration with ID = '\" + instanceId + \"'.\");",
+      "",
+      "    return durableContext.createCheckStatusResponse(req, instanceId);",
+      "}"
+    ]
+  },
+  "Durable Fan-Out/Fan-In Pattern": {
+    "prefix": "df-fanout",
+    "description": "Fan-out/fan-in pattern (Java)",
+    "body": [
+      "@FunctionName(\"${1:FanOutFanInOrchestrator}\")",
+      "public List<String> ${1:FanOutFanInOrchestrator}(",
+      "        @DurableOrchestrationTrigger(name = \"ctx\") TaskOrchestrationContext ctx) {",
+      "    List<String> workItems = ctx.callActivity(\"${2:GetWorkItems}\", null, List.class).await();",
+      "",
+      "    // Fan out: schedule all tasks in parallel",
+      "    List<Task<String>> parallelTasks = new ArrayList<>();",
+      "    for (String item : workItems) {",
+      "        parallelTasks.add(ctx.callActivity(\"${3:ProcessItem}\", item, String.class));",
+      "    }",
+      "",
+      "    // Fan in: wait for all tasks to complete",
+      "    List<String> results = ctx.allOf(parallelTasks).await();",
+      "",
+      "    return results;",
+      "}"
+    ]
+  },
+  "Durable Function Chaining Pattern": {
+    "prefix": "df-chain",
+    "description": "Function chaining pattern (Java)",
+    "body": [
+      "@FunctionName(\"${1:ChainOrchestrator}\")",
+      "public ${2:String} ${1:ChainOrchestrator}(",
+      "        @DurableOrchestrationTrigger(name = \"ctx\") TaskOrchestrationContext ctx) {",
+      "    ${2:String} result1 = ctx.callActivity(\"${3:Step1}\", ctx.getInput(${2:String}.class), ${2:String}.class).await();",
+      "    ${2:String} result2 = ctx.callActivity(\"${4:Step2}\", result1, ${2:String}.class).await();",
+      "    ${2:String} result3 = ctx.callActivity(\"${5:Step3}\", result2, ${2:String}.class).await();",
+      "",
+      "    return result3;",
+      "}"
+    ]
+  }
+}

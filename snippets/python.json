@@ -1,0 +1,142 @@
+{
+  "Durable Orchestrator Function": {
+    "prefix": "df-orch",
+    "description": "Durable Functions orchestrator (Python)",
+    "body": [
+      "import azure.functions as func",
+      "import azure.durable_functions as df",
+      "",
+      "",
+      "def orchestrator_function(context: df.DurableOrchestrationContext):",
+      "    result1 = yield context.call_activity('${1:ActivityName}', '${2:input}')",
+      "",
+      "    return [result1]",
+      "",
+      "",
+      "main = df.Orchestrator.create(orchestrator_function)"
+    ]
+  },
+  "Durable Activity Function": {
+    "prefix": "df-activity",
+    "description": "Durable Functions activity (Python)",
+    "body": [
+      "import logging",
+      "",
+      "",
+      "def main(input: ${1:str}) -> ${2:str}:",
+      "    logging.info(f'${3:Activity} processing: {input}')",
+      "    return f'Hello {input}'"
+    ]
+  },
+  "Durable Client / HTTP Starter": {
+    "prefix": "df-client",
+    "description": "Durable Functions HTTP starter client (Python)",
+    "body": [
+      "import azure.functions as func",
+      "import azure.durable_functions as df",
+      "",
+      "",
+      "async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:",
+      "    client = df.DurableOrchestrationClient(starter)",
+      "    instance_id = await client.start_new('${1:OrchestratorName}', None, req.get_body().decode())",
+      "",
+      "    logging.info(f'Started orchestration with ID = \\'{instance_id}\\'')",
+      "",
+      "    return client.create_check_status_response(req, instance_id)"
+    ]
+  },
+  "Durable Fan-Out/Fan-In Pattern": {
+    "prefix": "df-fanout",
+    "description": "Fan-out/fan-in pattern (Python)",
+    "body": [
+      "import azure.durable_functions as df",
+      "",
+      "",
+      "def orchestrator_function(context: df.DurableOrchestrationContext):",
+      "    work_items = yield context.call_activity('${1:GetWorkItems}', None)",
+      "",
+      "    # Fan out: schedule all tasks in parallel",
+      "    parallel_tasks = [context.call_activity('${2:ProcessItem}', item) for item in work_items]",
+      "",
+      "    # Fan in: wait for all tasks to complete",
+      "    results = yield context.task_all(parallel_tasks)",
+      "",
+      "    return results",
+      "",
+      "",
+      "main = df.Orchestrator.create(orchestrator_function)"
+    ]
+  },
+  "Durable Function Chaining Pattern": {
+    "prefix": "df-chain",
+    "description": "Function chaining pattern (Python)",
+    "body": [
+      "import azure.durable_functions as df",
+      "",
+      "",
+      "def orchestrator_function(context: df.DurableOrchestrationContext):",
+      "    result1 = yield context.call_activity('${1:Step1}', context.get_input())",
+      "    result2 = yield context.call_activity('${2:Step2}', result1)",
+      "    result3 = yield context.call_activity('${3:Step3}', result2)",
+      "",
+      "    return result3",
+      "",
+      "",
+      "main = df.Orchestrator.create(orchestrator_function)"
+    ]
+  },
+  "Durable Human Interaction Pattern": {
+    "prefix": "df-human",
+    "description": "Human interaction / approval pattern with timeout (Python)",
+    "body": [
+      "import azure.durable_functions as df",
+      "from datetime import timedelta",
+      "",
+      "",
+      "def orchestrator_function(context: df.DurableOrchestrationContext):",
+      "    yield context.call_activity('${1:RequestApproval}', context.get_input())",
+      "",
+      "    expiration = context.current_utc_datetime + timedelta(hours=${2:72})",
+      "    timeout_task = context.create_timer(expiration)",
+      "    approval_task = context.wait_for_external_event('${3:ApprovalEvent}')",
+      "",
+      "    winner = yield context.task_any([approval_task, timeout_task])",
+      "",
+      "    if winner == approval_task:",
+      "        timeout_task.cancel()",
+      "        yield context.call_activity('${4:ProcessApproval}', approval_task.result)",
+      "    else:",
+      "        yield context.call_activity('${5:HandleTimeout}', 'Approval timed out')",
+      "",
+      "",
+      "main = df.Orchestrator.create(orchestrator_function)"
+    ]
+  },
+  "Durable Monitor Pattern": {
+    "prefix": "df-monitor",
+    "description": "Monitor / polling pattern (Python)",
+    "body": [
+      "import azure.durable_functions as df",
+      "from datetime import timedelta",
+      "",
+      "",
+      "def orchestrator_function(context: df.DurableOrchestrationContext):",
+      "    end_time = context.current_utc_datetime + timedelta(hours=${1:6})",
+      "",
+      "    while context.current_utc_datetime < end_time:",
+      "        status = yield context.call_activity('${2:CheckStatus}', context.get_input())",
+      "",
+      "        if status == '${3:done}':",
+      "            yield context.call_activity('${4:SendNotification}', 'Job completed!')",
+      "            return 'completed'",
+      "",
+      "        next_check = context.current_utc_datetime + timedelta(seconds=${5:30})",
+      "        yield context.create_timer(next_check)",
+      "",
+      "    return 'timed out'",
+      "",
+      "",
+      "main = df.Orchestrator.create(orchestrator_function)"
+    ]
+  }
+}
