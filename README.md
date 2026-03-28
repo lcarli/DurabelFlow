@@ -4,46 +4,46 @@
 
 ---
 
-## 📦 Instalação
+## 📦 Installation
 
-### Pré-requisitos
+### Prerequisites
 
-| Requisito | Versão | Como instalar |
-|-----------|--------|---------------|
+| Requirement | Version | How to install |
+|-------------|---------|----------------|
 | **VS Code** | 1.85+ | [Download](https://code.visualstudio.com/) |
 | **Node.js** | 18+ | [Download](https://nodejs.org/) |
 | **Azure Functions Core Tools** | v4+ | `npm install -g azure-functions-core-tools@4 --unsafe-perm true` |
-| **Azure Storage Emulator** | — | [Azurite](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) ou conta Azure Storage real |
+| **Azure Storage Emulator** | — | [Azurite](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite) or a real Azure Storage account |
 
-### Opção 1: Instalar via arquivo VSIX (local)
+### Option 1: Install via VSIX file (local)
 
 ```bash
-# 1. Clone o repositório
-git clone <url-do-repo> durableflow
+# 1. Clone the repository
+git clone https://github.com/lcarli/DurabelFlow.git durableflow
 cd durableflow
 
-# 2. Instale as dependências
+# 2. Install dependencies
 npm install
 cd webview-ui && npm install && cd ..
 
-# 3. Build da extensão + WebView
+# 3. Build the extension + WebView
 npm run build
 npm run build:webview
 
-# 4. Gere o pacote .vsix
+# 4. Package the .vsix file
 npx @vscode/vsce package --no-dependencies
 
-# 5. Instale no VS Code
+# 5. Install in VS Code
 code --install-extension durableflow-0.1.0.vsix
 ```
 
-Ou instale manualmente: VS Code → `Ctrl+Shift+P` → **"Extensions: Install from VSIX..."** → selecione o arquivo `.vsix`.
+Or install manually: VS Code → `Ctrl+Shift+P` → **"Extensions: Install from VSIX..."** → select the `.vsix` file.
 
-### Opção 2: Modo desenvolvimento (Debug)
+### Option 2: Development mode (Debug)
 
 ```bash
-# 1. Clone e instale dependências
-git clone <url-do-repo> durableflow
+# 1. Clone and install dependencies
+git clone https://github.com/lcarli/DurabelFlow.git durableflow
 cd durableflow
 npm install
 cd webview-ui && npm install && cd ..
@@ -51,59 +51,59 @@ cd webview-ui && npm install && cd ..
 # 2. Build
 npm run build && npm run build:webview
 
-# 3. Abra o projeto no VS Code
+# 3. Open the project in VS Code
 code .
 
-# 4. Pressione F5 para abrir o Extension Development Host
+# 4. Press F5 to launch the Extension Development Host
 ```
 
-Isso abre uma nova janela do VS Code com a extensão carregada. Qualquer mudança no código pode ser testada com `Ctrl+Shift+F5` (restart).
+This opens a new VS Code window with the extension loaded. Any code changes can be tested with `Ctrl+Shift+F5` (restart).
 
-### Opção 3: Publicar no Marketplace (para distribuição)
+### Option 3: Publish to the Marketplace (for distribution)
 
 ```bash
-# 1. Crie uma conta no VS Code Marketplace
+# 1. Create an account on the VS Code Marketplace
 # https://marketplace.visualstudio.com/manage
 
-# 2. Gere um Personal Access Token (PAT) no Azure DevOps
+# 2. Generate a Personal Access Token (PAT) on Azure DevOps
 # https://dev.azure.com → User Settings → Personal Access Tokens
 # Scope: Marketplace (Manage)
 
-# 3. Login no vsce
-npx @vscode/vsce login <seu-publisher-id>
+# 3. Login to vsce
+npx @vscode/vsce login <your-publisher-id>
 
-# 4. Publique
+# 4. Publish
 npx @vscode/vsce publish --no-dependencies
 ```
 
-Depois de publicado, qualquer pessoa pode instalar buscando **"DurableFlow"** na aba de Extensions do VS Code.
+Once published, anyone can install it by searching for **"DurableFlow"** in the VS Code Extensions tab.
 
 ---
 
-## 🚀 Como Usar
+## 🚀 How to Use
 
-### Fluxo Principal: Visualizar Orchestrations em Tempo Real
+### Main Workflow: Visualize Orchestrations in Real Time
 
-A extensão foi projetada para **observar e visualizar** — você dispara suas functions normalmente e a extensão mostra o que está acontecendo.
+The extension is designed to **observe and visualize** — you trigger your functions as usual and the extension shows what's happening.
 
-#### Passo 1: Abra seu projeto Azure Functions
+#### Step 1: Open your Azure Functions project
 
-Abra no VS Code qualquer pasta que contenha um `host.json`. A extensão ativa automaticamente e mostra o ícone na **Activity Bar** (barra lateral esquerda).
+Open any folder containing a `host.json` in VS Code. The extension activates automatically and shows its icon in the **Activity Bar** (left sidebar).
 
-#### Passo 2: Inicie o Function Host
+#### Step 2: Start the Function Host
 
-**Opção A** — Pela extensão:
+**Option A** — Via the extension:
 - `Ctrl+Shift+P` → **"DurableFlow: Start Azure Functions Core Tools"**
-- Ou clique no ícone ▶ na sidebar da extensão
+- Or click the ▶ icon in the extension sidebar
 
-**Opção B** — Pelo terminal (como você já faz):
+**Option B** — Via the terminal (as you normally do):
 ```bash
 func host start
 ```
 
-#### Passo 3: Dispare a orchestration
+#### Step 3: Trigger the orchestration
 
-Use **qualquer ferramenta** para chamar seu HTTP trigger:
+Use **any tool** to call your HTTP trigger:
 
 ```bash
 # curl
@@ -111,62 +111,63 @@ curl -X POST http://localhost:7071/api/MyOrchestrator_HttpStart \
   -H "Content-Type: application/json" \
   -d '{"input": "Hello World"}'
 
-# REST Client (extensão do VS Code)
+# REST Client (VS Code extension)
 # Thunder Client
 # Postman
-# Seus testes automatizados
+# Your automated tests
 ```
 
-Ou use os atalhos da extensão:
-- **CodeLens**: Clique `▶ Start Orchestration` acima do seu orchestrator no código
+Or use the extension shortcuts:
+- **CodeLens**: Click `▶ Start Orchestration` above your orchestrator in the code
 - **Command Palette**: `Ctrl+Shift+P` → **"DurableFlow: Start Orchestration"**
-- **Sidebar**: Clique com botão direito no orchestrator → **Start Orchestration**
+- **Sidebar**: Right-click the orchestrator → **Start Orchestration**
 
-#### Passo 4: Assista a execução em tempo real
+#### Step 4: Watch the execution in real time
 
-A extensão **detecta automaticamente** novas instâncias e mostra uma notificação:
+The extension **automatically detects** new instances and shows a notification:
 
 ```
 🎭 New orchestration "MyOrchestrator" detected (Running)
   [Show Flow]  [View Details]  [Dismiss]
 ```
 
-Clique **"Show Flow"** para abrir o **Visual Flow** — um grafo interativo mostrando:
+Click **"Show Flow"** to open the **Visual Flow** — an interactive graph showing:
 
-- ⚪ **Pending** — atividade aguardando
-- 🔵 **Running** — executando agora (nó pulsante)
-- 🟢 **Completed** — concluída com sucesso
-- 🔴 **Failed** — falhou
-- 🟡 **Waiting** — aguardando evento externo
-- 🟣 **Replaying** — sendo replayed
+- ⚪ **Pending** — activity waiting to run
+- 🔵 **Running** — executing now (pulsing node)
+- 🟢 **Completed** — finished successfully
+- 🔴 **Failed** — failed
+- 🟡 **Waiting** — waiting for an external event
+- 🟣 **Replaying** — being replayed
 
-**Interaja com o grafo:**
-- **Click em um nó** → ver input/output JSON, duração, retry count
-- **"Go to Code"** → navegar ao arquivo da function
-- **Zoom/Pan** — scroll + arrastar
-- **Layout** — alternar Vertical ↔ Horizontal
-- **Export** — salvar como PNG/SVG
+**Interact with the graph:**
+- **Click a node** → see input/output JSON, duration, retry count
+- **"Go to Code"** → navigate to the function file
+- **Zoom/Pan** — scroll + drag
+- **Layout** — toggle Vertical ↔ Horizontal
+- **Auto-Fit** — toggle auto-fit on/off; manual zoom disables it
+- **Export** — save as PNG/SVG
 
 ---
 
-### Sidebar: Painel Lateral
+### Sidebar Panel
 
-O ícone da extensão na Activity Bar mostra 3 seções:
+The extension icon in the Activity Bar shows 3 sections:
 
 #### 🔹 Functions
-Lista todas as functions detectadas no projeto, agrupadas por tipo:
-- 🎭 Orchestrators → botão ▶ para iniciar
+Lists all detected functions in the project, grouped by type:
+- 🎭 Orchestrators → ▶ button to start
 - ⚡ Activities
 - 📦 Entities
 - 🚀 Durable Clients
-- 🌐 HTTP Triggers → botão ⚡ para disparar
+- 🌐 HTTP Triggers → ⚡ button to trigger
 
 #### 🔹 Orchestration Instances
-Lista instâncias ativas/recentes com status visual:
-- Botão direito → **Show Flow**, **View Details**, **Terminate**, **Purge**
+Lists active/recent instances with visual status:
+- Right-click → **Show Flow**, **View Details**, **Terminate**, **Purge**
 
 #### 🔹 Connections
-Mostra a configuração atual: environment (local/Azure), porta, storage provider, task hub.
+Shows current configuration: environment (local/Azure), port, storage provider, task hub.
 
 ---
 
@@ -174,10 +175,10 @@ Mostra a configuração atual: environment (local/Azure), porta, storage provide
 
 `Ctrl+Shift+P` → **"DurableFlow: Open Instance Dashboard"**
 
-Tabela completa com todas as instâncias:
-- **Filtrar** por status (Running, Completed, Failed...) ou nome
-- **Ações**: 📊 Show Flow, 🔍 View Details, 🛑 Terminate, 🗑 Purge
-- **Auto-refresh** automático
+Full table with all instances:
+- **Filter** by status (Running, Completed, Failed...) or name
+- **Actions**: 📊 Show Flow, 🔍 View Details, 🛑 Terminate, 🗑 Purge
+- **Auto-refresh** enabled
 
 ---
 
@@ -185,17 +186,17 @@ Tabela completa com todas as instâncias:
 
 `Ctrl+Shift+P` → **"DurableFlow: Open Performance Dashboard"**
 
-Métricas das suas orchestrations:
-- Total por status (running, completed, failed)
-- Tabela por orchestrator: runs, taxa de sucesso, duração média
+Orchestration metrics:
+- Totals by status (running, completed, failed)
+- Per-orchestrator table: runs, success rate, average duration
 
 ---
 
 ### Code Intelligence
 
-A extensão analisa seu código e adiciona informações visuais:
+The extension analyzes your code and adds visual information:
 
-#### CodeLens (acima das functions)
+#### CodeLens (above functions)
 ```
 ▶ Start Orchestration  |  📊 Show Flow  |  ⚡ calls 3 activities
 async function* myOrchestrator(context) {
@@ -207,23 +208,23 @@ async function myActivity(input) {
 ```
 
 #### Go to Definition
-Dentro de um orchestrator, clique com `Ctrl+Click` no nome de uma activity:
+Inside an orchestrator, `Ctrl+Click` on an activity name:
 ```typescript
 yield context.df.callActivity('SayHello', 'Tokyo');
-//                             ^^^^^^^^^ Ctrl+Click → vai para a definição
+//                             ^^^^^^^^^ Ctrl+Click → jumps to definition
 ```
 
 #### Hover
-Passe o mouse sobre o nome de uma function para ver tipo, callers, e call graph.
+Hover over a function name to see its type, callers, and call graph.
 
 ---
 
 ### Code Snippets
 
-Digite o prefixo e pressione `Tab`:
+Type the prefix and press `Tab`:
 
-| Prefixo | O que cria | Linguagens |
-|---------|-----------|------------|
+| Prefix | What it creates | Languages |
+|--------|----------------|-----------|
 | `df-orch` | Orchestrator function | TS/JS, C#, Python, Java |
 | `df-activity` | Activity function | TS/JS, C#, Python, Java |
 | `df-client` | HTTP Starter | TS/JS, C#, Python, Java |
@@ -241,98 +242,98 @@ Digite o prefixo e pressione `Tab`:
 
 `Ctrl+Shift+P` → **"DurableFlow: New Durable Function..."**
 
-Wizard interativo para criar novas functions:
-1. Escolha o tipo (Orchestrator, Activity, Entity, HTTP Starter)
-2. Escolha o pattern (Chaining, Fan-out, Human Interaction...)
-3. Digite o nome
-4. Escolha a linguagem (auto-detecta do projeto)
-5. Arquivo criado e aberto automaticamente!
+Interactive wizard to create new functions:
+1. Choose the type (Orchestrator, Activity, Entity, HTTP Starter)
+2. Choose the pattern (Chaining, Fan-out, Human Interaction...)
+3. Enter the name
+4. Choose the language (auto-detected from the project)
+5. File is created and opened automatically!
 
 ---
 
 ### Azure Integration
 
-#### Conectar ao Azure
+#### Connect to Azure
 1. `Ctrl+Shift+P` → **"DurableFlow: Azure Login"**
 2. `Ctrl+Shift+P` → **"DurableFlow: Select Function App"**
-3. Escolha: Subscription → Resource Group → Function App
-4. A extensão passa a monitorar a Function App na cloud
+3. Choose: Subscription → Resource Group → Function App
+4. The extension starts monitoring the Function App in the cloud
 
-#### Alertas
-Ative em Settings para receber notificações automáticas:
-- Orchestration rodando por mais de N minutos
-- Orchestration que falhou
+#### Alerts
+Enable in Settings to receive automatic notifications:
+- Orchestration running for more than N minutes
+- Orchestration that failed
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-Acesse via `Ctrl+Shift+P` → **"DurableFlow: Open Settings"** ou em `settings.json`:
+Access via `Ctrl+Shift+P` → **"DurableFlow: Open Settings"** or in `settings.json`:
 
 ```jsonc
 {
-  // Ambiente padrão
+  // Default environment
   "durableFunctionsUI.defaultEnvironment": "local",  // "local" | "azure"
 
-  // Porta do Azure Functions Core Tools
+  // Azure Functions Core Tools port
   "durableFunctionsUI.localPort": 7071,
 
-  // Intervalo de polling para status (ms)
+  // Polling interval for status updates (ms)
   "durableFunctionsUI.pollingIntervalMs": 2000,
 
-  // Máximo de instâncias no dashboard
+  // Maximum instances in the dashboard
   "durableFunctionsUI.maxInstances": 100,
 
-  // Nome do Task Hub (vazio = auto-detect do host.json)
+  // Task Hub name (empty = auto-detect from host.json)
   "durableFunctionsUI.taskHubName": "",
 
-  // Storage provider do Durable Task
+  // Durable Task storage provider
   "durableFunctionsUI.storageProvider": "AzureStorage",  // "Netherite" | "MSSQL"
 
-  // Mostrar CodeLens acima das functions
+  // Show CodeLens above functions
   "durableFunctionsUI.showCodeLens": true,
 
-  // Nível de log
+  // Log level
   "durableFunctionsUI.logLevel": "info",
 
-  // Alertas
+  // Alerts
   "durableFunctionsUI.alerts.enabled": false,
   "durableFunctionsUI.alerts.longRunningThresholdMinutes": 30,
   "durableFunctionsUI.alerts.failureAlertEnabled": true,
 
-  // Telemetria (opt-in)
+  // Telemetry (opt-in)
   "durableFunctionsUI.enableTelemetry": false
 }
 ```
 
 ---
 
-## 🎯 Todos os Commands
+## 🎯 All Commands
 
-| Command | Atalho | Descrição |
-|---------|--------|-----------|
-| `DurableFlow: Start Orchestration` | — | Iniciar uma orchestration com input JSON |
-| `DurableFlow: Show Orchestration Flow` | — | Abrir visualização do flow de uma instância |
-| `DurableFlow: Open Instance Dashboard` | — | Abrir dashboard de instâncias |
-| `DurableFlow: Open Performance Dashboard` | — | Abrir dashboard de performance |
-| `DurableFlow: Raise Event` | — | Enviar evento para instância running |
-| `DurableFlow: Terminate Instance` | — | Terminar uma instância |
-| `DurableFlow: Purge Instance` | — | Purgar histórico de uma instância |
-| `DurableFlow: Trigger Function` | — | Disparar HTTP function |
-| `DurableFlow: Start Azure Functions Core Tools` | — | Iniciar func host start |
-| `DurableFlow: Stop Azure Functions Core Tools` | — | Parar Core Tools |
-| `DurableFlow: New Durable Function...` | — | Wizard para criar nova function |
-| `DurableFlow: Azure Login` | — | Login no Azure |
-| `DurableFlow: Azure Logout` | — | Logout do Azure |
-| `DurableFlow: Select Function App` | — | Selecionar Function App no Azure |
-| `DurableFlow: Open in Portal` | — | Abrir no Azure Portal |
-| `DurableFlow: Refresh Functions` | — | Atualizar lista de functions |
-| `DurableFlow: Refresh Instances` | — | Atualizar lista de instâncias |
-| `DurableFlow: Open Settings` | — | Abrir configurações |
+| Command | Shortcut | Description |
+|---------|----------|-------------|
+| `DurableFlow: Start Orchestration` | — | Start an orchestration with JSON input |
+| `DurableFlow: Show Orchestration Flow` | — | Open the visual flow for an instance |
+| `DurableFlow: Open Instance Dashboard` | — | Open the instance dashboard |
+| `DurableFlow: Open Performance Dashboard` | — | Open the performance dashboard |
+| `DurableFlow: Raise Event` | — | Send an event to a running instance |
+| `DurableFlow: Terminate Instance` | — | Terminate an instance |
+| `DurableFlow: Purge Instance` | — | Purge an instance's history |
+| `DurableFlow: Trigger Function` | — | Trigger an HTTP function |
+| `DurableFlow: Start Azure Functions Core Tools` | — | Start func host start |
+| `DurableFlow: Stop Azure Functions Core Tools` | — | Stop Core Tools |
+| `DurableFlow: New Durable Function...` | — | Wizard to create a new function |
+| `DurableFlow: Azure Login` | — | Log in to Azure |
+| `DurableFlow: Azure Logout` | — | Log out of Azure |
+| `DurableFlow: Select Function App` | — | Select a Function App in Azure |
+| `DurableFlow: Open in Portal` | — | Open in the Azure Portal |
+| `DurableFlow: Refresh Functions` | — | Refresh the functions list |
+| `DurableFlow: Refresh Instances` | — | Refresh the instances list |
+| `DurableFlow: Open Settings` | — | Open settings |
 
 ---
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
 ```
 Extension Host (TypeScript + esbuild)
@@ -342,64 +343,64 @@ Extension Host (TypeScript + esbuild)
 │   ├── AzureProvider → Azure Management REST API
 │   └── DurableApiClient → Durable Task HTTP API
 ├── Services
-│   ├── InstanceWatcher → Auto-detect novas instâncias
-│   ├── AlertService → Notificações configuráveis
-│   ├── LogService → Output channels por instância
-│   ├── AppInsightsService → Query KQL via REST
+│   ├── InstanceWatcher → Auto-detect new instances
+│   ├── AlertService → Configurable notifications
+│   ├── LogService → Output channels per instance
+│   ├── AppInsightsService → KQL queries via REST
 │   └── TelemetryService → Opt-in telemetry
 ├── Tree Views (Functions, Instances, Connections)
-├── Commands (18 commands registrados)
+├── Commands (18 registered commands)
 └── WebView Panels (React 18 + React Flow)
-    ├── FlowPanel → DAG interativo da orchestration
-    ├── DashboardPanel → Tabela de instâncias
-    └── PerformancePanel → Métricas e stats
+    ├── FlowPanel → Interactive orchestration DAG
+    ├── DashboardPanel → Instance table
+    └── PerformancePanel → Metrics and stats
 ```
 
 ---
 
-## 🛠️ Desenvolvimento
+## 🛠️ Development
 
 ```bash
-# Instalar dependências
+# Install dependencies
 npm install
 cd webview-ui && npm install && cd ..
 
-# Build completo
+# Full build
 npm run build           # Extension (esbuild)
 npm run build:webview   # WebView (Vite + React)
 
-# Watch mode (rebuild automático)
+# Watch mode (auto-rebuild)
 npm run watch
 
-# Testes
-npm test                # Vitest (52 testes)
+# Tests
+npm test                # Vitest (52 tests)
 
 # Lint
 npm run lint            # ESLint
 npm run lint:fix        # Auto-fix
 
-# Formatar
+# Format
 npm run format          # Prettier
 
-# Gerar pacote .vsix
+# Package as .vsix
 npx @vscode/vsce package --no-dependencies
 ```
 
 ### Debug
 
-1. Abra o projeto no VS Code
-2. Pressione `F5` → abre Extension Development Host
-3. Abra uma pasta com um projeto Azure Functions
-4. A extensão ativa e mostra o ícone na sidebar
+1. Open the project in VS Code
+2. Press `F5` → launches Extension Development Host
+3. Open a folder with an Azure Functions project
+4. The extension activates and shows its icon in the sidebar
 
-### Estrutura do Projeto
+### Project Structure
 
 ```
 ├── src/                    # Extension source (TypeScript)
 │   ├── extension.ts        # Entry point
 │   ├── commands/           # 18 command handlers
 │   ├── providers/          # Local + Azure + Durable API clients
-│   ├── analyzers/          # Code analysis (4 linguagens)
+│   ├── analyzers/          # Code analysis (4 languages)
 │   ├── codelens/           # CodeLens + Definition + Hover
 │   ├── views/              # Tree View providers
 │   ├── services/           # Business logic services
@@ -411,7 +412,7 @@ npx @vscode/vsce package --no-dependencies
 │       ├── flow/           # React Flow components + nodes
 │       ├── shared/         # Types, messaging, theme
 │       └── App.tsx         # Main React app
-├── snippets/               # Code snippets (4 linguagens)
+├── snippets/               # Code snippets (4 languages)
 ├── test/                   # Vitest unit tests
 ├── .github/workflows/      # CI/CD (GitHub Actions)
 └── package.json            # Extension manifest
