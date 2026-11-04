@@ -37,7 +37,7 @@ export class DurableApiClient {
     try {
       // Try /admin/host/systemkeys first
       const response = await this.client.get<Record<string, unknown>>('/admin/host/systemkeys');
-      this.logger.debug(`systemkeys response (${response.statusCode}):`, response.body);
+      this.logger.debug(`systemkeys response (${response.statusCode})`);
 
       if (response.statusCode === 200 && response.body) {
         // Format 1: { keys: [{ name, value }] }
@@ -69,7 +69,7 @@ export class DurableApiClient {
     // Fallback: try /admin/host/keys
     try {
       const response = await this.client.get<Record<string, unknown>>('/admin/host/keys');
-      this.logger.debug(`host/keys response (${response.statusCode}):`, response.body);
+      this.logger.debug(`host/keys response (${response.statusCode})`);
 
       if (response.statusCode === 200 && response.body) {
         const body = response.body as {
@@ -103,8 +103,8 @@ export class DurableApiClient {
     const base = '/runtime/webhooks/durableTask';
     const params: string[] = [];
 
-    if (this.taskHubName) params.push(`taskHub=${this.taskHubName}`);
-    if (this.systemKey) params.push(`code=${this.systemKey}`);
+    if (this.taskHubName) params.push(`taskHub=${encodeURIComponent(this.taskHubName)}`);
+    if (this.systemKey) params.push(`code=${encodeURIComponent(this.systemKey)}`);
 
     const queryString = params.join('&');
     if (!queryString) return `${base}${endpoint}`;
@@ -118,8 +118,8 @@ export class DurableApiClient {
     input?: unknown,
     instanceId?: string,
   ): Promise<OrchestrationInstance | null> {
-    const idPart = instanceId ? `/${instanceId}` : '';
-    const path = this.buildPath(`/orchestrators/${functionName}${idPart}`);
+    const idPart = instanceId ? `/${encodeURIComponent(instanceId)}` : '';
+    const path = this.buildPath(`/orchestrators/${encodeURIComponent(functionName)}${idPart}`);
 
     try {
       const response = await this.client.post<OrchestrationInstance>(path, input);
@@ -151,7 +151,7 @@ export class DurableApiClient {
     if (showHistoryOutput) params.set('showHistoryOutput', 'true');
     if (showInput) params.set('showInput', 'true');
 
-    const path = this.buildPath(`/instances/${instanceId}?${params.toString()}`);
+    const path = this.buildPath(`/instances/${encodeURIComponent(instanceId)}?${params.toString()}`);
 
     try {
       const response = await this.client.get<OrchestrationInstance>(path);
@@ -206,7 +206,7 @@ export class DurableApiClient {
 
   async terminateInstance(instanceId: string, reason: string = ''): Promise<boolean> {
     const path = this.buildPath(
-      `/instances/${instanceId}/terminate?reason=${encodeURIComponent(reason)}`,
+      `/instances/${encodeURIComponent(instanceId)}/terminate?reason=${encodeURIComponent(reason)}`,
     );
 
     try {
@@ -219,7 +219,9 @@ export class DurableApiClient {
   }
 
   async raiseEvent(instanceId: string, eventName: string, eventData?: unknown): Promise<boolean> {
-    const path = this.buildPath(`/instances/${instanceId}/raiseEvent/${eventName}`);
+    const path = this.buildPath(
+      `/instances/${encodeURIComponent(instanceId)}/raiseEvent/${encodeURIComponent(eventName)}`,
+    );
 
     try {
       const response = await this.client.post(path, eventData);
@@ -232,7 +234,7 @@ export class DurableApiClient {
 
   async suspendInstance(instanceId: string, reason: string = ''): Promise<boolean> {
     const path = this.buildPath(
-      `/instances/${instanceId}/suspend?reason=${encodeURIComponent(reason)}`,
+      `/instances/${encodeURIComponent(instanceId)}/suspend?reason=${encodeURIComponent(reason)}`,
     );
 
     try {
@@ -246,7 +248,7 @@ export class DurableApiClient {
 
   async resumeInstance(instanceId: string, reason: string = ''): Promise<boolean> {
     const path = this.buildPath(
-      `/instances/${instanceId}/resume?reason=${encodeURIComponent(reason)}`,
+      `/instances/${encodeURIComponent(instanceId)}/resume?reason=${encodeURIComponent(reason)}`,
     );
 
     try {
@@ -259,7 +261,7 @@ export class DurableApiClient {
   }
 
   async purgeInstance(instanceId: string): Promise<boolean> {
-    const path = this.buildPath(`/instances/${instanceId}`);
+    const path = this.buildPath(`/instances/${encodeURIComponent(instanceId)}`);
 
     try {
       const response = await this.client.delete<PurgeHistoryResult>(path);
@@ -272,7 +274,7 @@ export class DurableApiClient {
 
   async rewindInstance(instanceId: string, reason: string = ''): Promise<boolean> {
     const path = this.buildPath(
-      `/instances/${instanceId}/rewind?reason=${encodeURIComponent(reason)}`,
+      `/instances/${encodeURIComponent(instanceId)}/rewind?reason=${encodeURIComponent(reason)}`,
     );
 
     try {

@@ -5,6 +5,21 @@
   "version": "0.1.0",
   "publisher": "durable-functions-ui",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lcarli/DurabelFlow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lcarli/DurabelFlow/issues"
+  },
+  "homepage": "https://github.com/lcarli/DurabelFlow#readme",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "DurableFlow starts Azure Functions Core Tools and executes project code, so it requires a trusted workspace."
+    },
+    "virtualWorkspaces": false
+  },
   "engines": {
     "vscode": "^1.85.0"
   },

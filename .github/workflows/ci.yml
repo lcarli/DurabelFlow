@@ -28,6 +28,12 @@ jobs:
       - name: Install webview dependencies
         run: cd webview-ui && npm ci
 
+      - name: Typecheck extension
+        run: npx tsc --noEmit
+
+      - name: Typecheck webview
+        run: cd webview-ui && npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
@@ -61,5 +67,5 @@ jobs:
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
-          name: durable-functions-ui-vsix
+          name: durableflow-vsix
           path: '*.vsix'

@@ -358,7 +358,9 @@ export class PerformancePanel {
       return (ms / 3600000).toFixed(1) + 'h';
     }
 
-    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
 
     vscode.postMessage({ type: 'ready' });
   </script>

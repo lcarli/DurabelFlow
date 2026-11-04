@@ -7,16 +7,32 @@ export interface HttpResponse<T = unknown> {
   headers: Record<string, string | string[] | undefined>;
 }
 
+export interface HttpClientOptions {
+  timeoutMs?: number;
+  maxResponseBytes?: number;
+}
+
+const DEFAULT_TIMEOUT_MS = 10_000;
+const DEFAULT_MAX_RESPONSE_BYTES = 50 * 1024 * 1024;
+
 export class HttpClient {
   private baseUrl: string;
   private defaultHeaders: Record<string, string>;
+  private timeoutMs: number;
+  private maxResponseBytes: number;
 
-  constructor(baseUrl: string, headers: Record<string, string> = {}) {
+  constructor(
+    baseUrl: string,
+    headers: Record<string, string> = {},
+    options: HttpClientOptions = {},
+  ) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...headers,
     };
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.maxResponseBytes = options.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
   }
 
   updateBaseUrl(baseUrl: string) {
@@ -60,8 +76,22 @@ export class HttpClient {
 
       const req = lib.request(options, (res) => {
         const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        let received = 0;
+        let overflowed = false;
+        res.on('data', (chunk: Buffer) => {
+          if (overflowed) return;
+          received += chunk.length;
+          if (received > this.maxResponseBytes) {
+            overflowed = true;
+            const error = new Error(`Response exceeded ${this.maxResponseBytes} bytes`);
+            req.destroy(error);
+            reject(error);
+            return;
+          }
+          chunks.push(chunk);
+        });
         res.on('end', () => {
+          if (overflowed) return;
           const raw = Buffer.concat(chunks).toString('utf-8');
           let parsed: T;
           try {
@@ -77,6 +107,9 @@ export class HttpClient {
         });
       });
 
+      req.setTimeout(this.timeoutMs, () => {
+        req.destroy(Object.assign(new Error(`Request timed out after ${this.timeoutMs}ms`), { code: 'ETIMEDOUT' }));
+      });
       req.on('error', reject);
 
       if (body !== undefined) {

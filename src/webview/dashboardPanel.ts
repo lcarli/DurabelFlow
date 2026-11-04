@@ -275,23 +275,35 @@ export class DashboardPanel {
         const created = new Date(i.createdTime).toLocaleString();
         const updated = new Date(i.lastUpdatedTime).toLocaleString();
         const isRunning = ['Running', 'Pending', 'Suspended'].includes(i.runtimeStatus);
+        const id = esc(i.instanceId);
+        const status = esc(i.runtimeStatus);
+        const btn = (action, title, icon) =>
+          '<button data-action="' + action + '" data-id="' + id + '" title="' + title + '">' + icon + '</button>';
         return '<tr>' +
           '<td><strong>' + esc(i.name) + '</strong></td>' +
-          '<td><span class="status status-' + i.runtimeStatus + '">' + i.runtimeStatus + '</span></td>' +
-          '<td class="id-cell" title="' + esc(i.instanceId) + '">' + esc(i.instanceId) + '</td>' +
+          '<td><span class="status status-' + status + '">' + status + '</span></td>' +
+          '<td class="id-cell" title="' + id + '">' + id + '</td>' +
           '<td>' + created + '</td>' +
           '<td>' + updated + '</td>' +
           '<td class="actions">' +
-            '<button onclick="cmd(\\'showFlow\\',\\'' + esc(i.instanceId) + '\\')" title="Show Flow">📊</button>' +
-            '<button onclick="cmd(\\'viewDetails\\',\\'' + esc(i.instanceId) + '\\')" title="View Details">🔍</button>' +
-            (isRunning ? '<button onclick="cmd(\\'terminate\\',\\'' + esc(i.instanceId) + '\\')" title="Terminate">🛑</button>' : '') +
-            '<button onclick="cmd(\\'purge\\',\\'' + esc(i.instanceId) + '\\')" title="Purge">🗑</button>' +
+            btn('showFlow', 'Show Flow', '📊') +
+            btn('viewDetails', 'View Details', '🔍') +
+            (isRunning ? btn('terminate', 'Terminate', '🛑') : '') +
+            btn('purge', 'Purge', '🗑') +
           '</td></tr>';
       }).join('');
     }
 
-    function cmd(type, instanceId) { vscode.postMessage({ type, instanceId }); }
-    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    // Inline onclick handlers are blocked by the CSP (script-src nonce only), so delegate instead.
+    document.getElementById('instancesBody').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      vscode.postMessage({ type: button.dataset.action, instanceId: button.dataset.id });
+    });
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
 
     vscode.postMessage({ type: 'ready' });
   </script>

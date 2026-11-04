@@ -41,7 +41,9 @@ export function registerCommands(
 ) {
   const logger = Logger.getInstance();
 
-  const commands: [string, (...args: unknown[]) => unknown][] = [
+  // Handlers declare their own argument types; VS Code passes them untyped at runtime.
+  type CommandHandler = (...args: never[]) => unknown;
+  const commands: [string, CommandHandler][] = [
     [
       'durableFunctionsUI.refreshFunctions',
       () => ctx.functionsTree.refresh(),
@@ -100,11 +102,12 @@ export function registerCommands(
     ],
     [
       'durableFunctionsUI.showCallers',
-      (name: string, callers: unknown[]) => showCallers(name, callers),
+      (name: string, callers: { name: string; filePath: string; line: number }[]) =>
+        showCallers(name, callers),
     ],
     [
       'durableFunctionsUI.showDesignFlow',
-      (fn: unknown) => showDesignFlow(ctx, fn),
+      (fn: { name: string; callsTo: string[] }) => showDesignFlow(ctx, fn),
     ],
     [
       'durableFunctionsUI.openDashboard',
@@ -137,7 +140,9 @@ export function registerCommands(
   ];
 
   for (const [id, handler] of commands) {
-    context.subscriptions.push(vscode.commands.registerCommand(id, handler));
+    context.subscriptions.push(
+      vscode.commands.registerCommand(id, handler as (...args: unknown[]) => unknown),
+    );
     logger.debug(`Registered command: ${id}`);
   }
 }

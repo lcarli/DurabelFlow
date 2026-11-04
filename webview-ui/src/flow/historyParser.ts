@@ -2,17 +2,73 @@ import type { HistoryEvent } from '../shared/types';
 import type { FlowNodeData, FlowEdgeData, NodeStatus } from '../shared/messages';
 
 /**
+ * The Durable Functions HTTP status API (showHistory=true) only reports completion events
+ * (TaskCompleted, TaskFailed, SubOrchestrationInstance*) carrying `ScheduledTime`, and never
+ * TaskScheduled / SubOrchestrationInstanceCreated. Rebuild the missing "scheduled" events so
+ * the rest of the pipeline can treat both history flavors the same way. Idempotent.
+ */
+export function normalizeHistory(events: HistoryEvent[]): HistoryEvent[] {
+  const pairs: { created: string; done: string[] }[] = [
+    { created: 'TaskScheduled', done: ['TaskCompleted', 'TaskFailed'] },
+    {
+      created: 'SubOrchestrationInstanceCreated',
+      done: ['SubOrchestrationInstanceCompleted', 'SubOrchestrationInstanceFailed'],
+    },
+  ];
+
+  const nameOf = (e: HistoryEvent) => e.Name || e.FunctionName || '';
+  const synthesized: HistoryEvent[] = [];
+
+  for (const { created, done } of pairs) {
+    const available = new Map<string, number>();
+    for (const e of events) {
+      if (e.EventType === created) {
+        available.set(nameOf(e), (available.get(nameOf(e)) ?? 0) + 1);
+      }
+    }
+
+    for (const e of events) {
+      if (!done.includes(e.EventType)) continue;
+      const name = nameOf(e);
+      // Completions without a name can only be paired with whichever scheduled event is still open.
+      const key = name || [...available.entries()].find(([, n]) => n > 0)?.[0] || name;
+      const remaining = available.get(key) ?? 0;
+      if (remaining > 0) {
+        available.set(key, remaining - 1);
+        continue;
+      }
+      const scheduledAt = e.ScheduledTime ? new Date(e.ScheduledTime) : undefined;
+      synthesized.push({
+        EventType: created,
+        Name: name || undefined,
+        Input: e.Input,
+        Timestamp:
+          scheduledAt && !isNaN(scheduledAt.getTime()) ? scheduledAt.toISOString() : e.Timestamp,
+      });
+    }
+  }
+
+  if (synthesized.length === 0) return events;
+
+  // Array.prototype.sort is stable, so equal timestamps keep their original relative order.
+  return [...events, ...synthesized].sort(
+    (a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime(),
+  );
+}
+
+/**
  * Converts Durable Functions execution history into a graph of nodes and edges.
  * Handles sequential chains, parallel fan-out/fan-in, sub-orchestrations, timers, and events.
  * Uses stable IDs based on event index to avoid graph flicker on polling updates.
  */
 export function historyToFlowData(
   _orchestratorName: string,
-  historyEvents: HistoryEvent[],
+  rawHistoryEvents: HistoryEvent[],
   runtimeStatus: string,
 ): { nodes: FlowNodeData[]; edges: FlowEdgeData[] } {
   const nodes: FlowNodeData[] = [];
   const edges: FlowEdgeData[] = [];
+  const historyEvents = normalizeHistory(rawHistoryEvents);
 
   // Filter out OrchestratorStarted/OrchestratorCompleted and other internal replay events
   // Keep the actual task lifecycle events
@@ -131,6 +187,7 @@ export function historyToFlowData(
 
   // Add sub-orchestrations, timers, events
   let extraIndex = 0;
+  let timerCount = 0;
   for (const event of relevantEvents) {
     switch (event.EventType) {
       case 'SubOrchestrationInstanceCreated': {
@@ -159,10 +216,13 @@ export function historyToFlowData(
       }
       case 'TimerCreated': {
         const nodeId = `timer-${extraIndex++}`;
-        const fired = relevantEvents.find(
-          (e) => e.EventType === 'TimerFired' && e.TimerId === event.TimerId,
-        );
-        const fireAt = event.FireAt || event.DurableTimerExpiration;
+        // The HTTP API omits TimerId; fall back to pairing by order of appearance.
+        const timerOrdinal = timerCount++;
+        const fired =
+          event.TimerId !== undefined
+            ? relevantEvents.find((e) => e.EventType === 'TimerFired' && e.TimerId === event.TimerId)
+            : relevantEvents.filter((e) => e.EventType === 'TimerFired')[timerOrdinal];
+        const fireAt = event.FireAt || event.DurableTimerExpiration || fired?.FireAt;
         nodes.push({
           id: nodeId,
           type: 'timer',

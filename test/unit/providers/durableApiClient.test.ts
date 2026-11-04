@@ -30,6 +30,16 @@ describe('DurableApiClient', () => {
   });
 
   describe('startOrchestration', () => {
+    it('should URL-encode instance IDs and names in the path', async () => {
+      mockHttp.post.mockResolvedValue({ statusCode: 202, body: {} });
+
+      await client.startOrchestration('My Orch', null, 'id/with?chars');
+
+      expect(mockHttp.post).toHaveBeenCalledWith(
+        expect.stringContaining('/orchestrators/My%20Orch/id%2Fwith%3Fchars'),
+        null,
+      );
+    });
     it('should start orchestration and return instance info', async () => {
       const mockResponse = {
         statusCode: 202,

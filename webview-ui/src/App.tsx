@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { FlowCanvas } from './flow/FlowCanvas';
 import { ReplayTimeline } from './flow/ReplayTimeline';
-import { historyToFlowData } from './flow/historyParser';
+import { historyToFlowData, normalizeHistory } from './flow/historyParser';
 import type { ExtensionMessage, FlowNodeData, FlowEdgeData } from './shared/messages';
 import type { HistoryEvent } from './shared/types';
 import { postMessage } from './shared/vscodeApi';
@@ -47,9 +47,13 @@ export default function App() {
               }
             }
 
-            // Convert accumulated map back to sorted array
-            const mergedEvents = Array.from(accumulatedHistory.values())
-              .sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
+            // Convert accumulated map back to sorted array (completion-only history is expanded
+            // with the TaskScheduled events the HTTP API omits)
+            const mergedEvents = normalizeHistory(
+              Array.from(accumulatedHistory.values()).sort(
+                (a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime(),
+              ),
+            );
 
             setHistoryEvents(mergedEvents);
 
